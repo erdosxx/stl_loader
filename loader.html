@@ -114,6 +114,10 @@
             mesh.position.set( 0, 0, 0 );
             mesh.scale.set( 2, 2, 2 );
             camera.lookAt(mesh.position);
+
+            var bbHelper = new THREE.BoxHelper(mesh, 0xffffff);
+            bbHelper.visible = true;
+            scene.add(bbHelper);
             scene.add( mesh );
         } );
     }
