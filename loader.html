@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Three.js webgl -STL loader</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style>
+		body
+		{
+			margin: 0;
+		}
+		canvas
+		{
+			width: 100%;
+			height: 100%
+		}
+	</style>
+</head>
+
+<body>
+<script type="text/javascript" src="js/three.js"></script>
+<script type="text/javascript" src="js/libs/stats.min.js"></script>
+<script type="text/javascript" src="js/OrbitControls.js"></script>
+<script type="text/javascript" src="js/TrackballControls.js"></script>
+<script type="text/javascript" src="js/loaders/ObjectLoader.js"></script>
+<script type="text/javascript" src="js/loaders/STLLoader.js"></script>
+
+<script>
+    var scene = new THREE.Scene( );
+    var WIDTH= window.innerWidth;
+    var HEIGHT = window.innerHeight;
+    var renderer, camera;
+
+    init();
+    GameLoop( );
+
+    function init() {
+        define_scene();
+        define_renderer();
+        create_light();
+
+        define_controls();
+
+        //camera.position.z = 70;
+        //camera.position.set(200, 40, 30);
+        camera.position.set(140, 70, 30);
+
+        //load_object_loader();
+        load_stl_with_material();
+
+        window.addEventListener('resize', onWindowResize);
+    }
+
+    function onWindowResize() {
+        // check when the browser size has changed and adjust the camera accordingly
+        renderer.setSize(WIDTH, HEIGHT);
+        camera.aspect = WIDTH / HEIGHT;
+        camera.updateProjectionMatrix();
+    }
+
+    function define_scene() {
+        var fieldOfView = 75;
+        var nearPlane = 0.1;
+        var farPlane = 1000;
+        camera = new THREE.PerspectiveCamera(fieldOfView, WIDTH / HEIGHT, nearPlane, farPlane);
+    }
+
+    function define_renderer()
+    {
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(WIDTH, HEIGHT);
+        document.body.appendChild(renderer.domElement);
+    }
+
+    function define_controls() {
+        // Add OrbitControls so that we can pan around with the mouse.
+        var controls = new THREE.OrbitControls(camera, renderer.domElement);
+		/*
+		 var controls = new THREE.TrackballControls( camera );
+		 controls.rotateSpeed = 1.0;
+		 controls.zoomSpeed = 1.2;
+		 controls.panSpeed = 0.8;
+		 controls.noZoom = false;
+		 controls.noPan = false;
+		 controls.staticMoving = true;
+		 controls.dynamicDampingFactor = 0.3;
+		 controls.keys = [ 65, 83, 68 ];
+		 controls.addEventListener( 'change', render );
+		 */
+    }
+
+    function load_stl_with_material() {
+        var stl_loader = new THREE.STLLoader();
+        var material = new THREE.MeshPhongMaterial({color: 0xAAAAAA, specular: 0x111111, shininess: 200});
+        //var material = new THREE.MeshStandardMaterial({color: 0xAAAAAA, specular: 0x111111, shininess: 200});
+// var stl_file = './models/stl/binary/2011-02-09_00001-001-36-35-34-33-32-31-41-42-43-44-45-46-bitesplint_cad.stl';
+        //var stl_file = './models/stl/binary/2011-02-09_00001-001-lowerjaw.stl';
+//    var stl_file = './models/stl/binary/2011-02-09_00001-001-upperjaw.stl';
+//    var stl_file = './models/stl/binary/2011-02-11_00001-007-upperjaw.stl';
+//    var stl_file = './models/stl/binary/2011-02-11_00001-010-11-abutment_cad.stl';
+//    var stl_file = './models/stl/binary/2011-02-11_00001-010-lowerjaw.stl';
+//    var stl_file = './models/stl/binary/2011-02-11_00001-010-upperjaw.stl';
+//    var stl_file = './models/stl/binary/2011-02-11_00001-010-upperjaw-gingiva.stl';
+//    var stl_file = './models/stl/binary/2011-02-11_00001-010-upperjaw-marker.stl';
+//    var stl_file = './models/stl/binary/2011-02-11_00001-011.stl';
+    var stl_file = './models/stl/binary/2011-02-14_00001-001.stl';
+
+        stl_loader.load( stl_file, function ( geometry ) {
+            var mesh = new THREE.Mesh( geometry, material );
+			mesh.castShadow = true;
+			mesh.receiveShadow = true;
+            //mesh.rotation.set( - Math.PI / 2, 0.3, 0 );
+            mesh.rotation.set( -1.5, 0.3, -1.7 );
+            mesh.position.set( 0, 0, 0 );
+            mesh.scale.set( 2, 2, 2 );
+            camera.lookAt(mesh.position);
+            scene.add( mesh );
+        } );
+    }
+
+    function create_light() {
+        //var light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+        var light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1.5 );
+        scene.add(light);
+
+        /*
+        var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.4);
+        scene.add(ambientLight);
+        */
+    }
+
+    function load_object_loader() {
+        var obj_loader = new THREE.ObjectLoader();
+        obj_loader.load
+        (
+            // resource URL
+            'models/skull.json',
+            // Function when resource is loaded
+            function ( object )
+            {
+                scene.add( object );
+            }
+        );
+    }
+
+    // game logic
+    function update( )
+    {
+    }
+
+    // draw scene
+    function render( )
+    {
+        renderer.render( scene, camera );
+    }
+
+    // run game loop (update, render, repeat)
+    function GameLoop( )
+    {
+        requestAnimationFrame( GameLoop );
+        update( );
+        render( );
+    }
+</script>
+</body>
+
+</html>
