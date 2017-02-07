@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>http://pastebin.com/rzFrGtBb</title>
+    <style>
+        body
+        {
+            margin: 0;
+        }
+        canvas
+        {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<script type="text/javascript" src="js/three.min.js"> </script>
+
+<script>
+    var scene;
+    var camera;
+    var renderer;
+    var PI=Math.PI;
+
+    var cube;
+
+    $(function(){
+        setupThree();
+        setupScene();
+
+        render();
+    });
+
+    function setupThree(){
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        document.body.appendChild( renderer.domElement );
+    }
+
+    function setupScene(){
+        var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+        var material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+        cube = new THREE.Mesh( geometry, material );
+
+        scene.add(cube);
+
+        camera.position.z = 1.2;
+
+        //fitting by adjusting camera position
+        //NOT WORKING
+        var cubeHeight=1;
+        var calc_distance= cubeHeight/ 2 / Math.tan(Math.PI * camera.fov / 360);
+
+        //either set
+        //camera.position.z = calc_distance;
+
+        //or animate
+        var obj={
+            pos: camera.position.z
+        };
+
+        $(obj).animate({
+            pos: newFOV
+        },{
+            step:function(_pos_now){
+                camera.position.z=_pos_now;
+            },
+            duration: 1000
+        });
+    }
+
+    function render(){
+        requestAnimationFrame( render );
+        renderer.render( scene, camera);
+    }
+</script>
+
+</body>
+</html>

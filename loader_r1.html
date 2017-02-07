@@ -10,8 +10,8 @@
         }
         canvas
         {
-            width: 100%
-            height: 100%
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
@@ -31,6 +31,9 @@
     var controls;
     var object_width, object_height;
     var object_y_pos;
+    var mesh;
+    var bbHelper;
+    var boundingBox;
 
     init();
     animate();
@@ -43,7 +46,19 @@
         define_renderer();
 
         create_stl_object();
-        create_light();
+        //create_object_bounding_box();
+
+        add_axis_helper();
+
+        add_arrow_helper(1.8, -46.3, 4.4);
+        add_arrow_helper(63.8, 3.6, 25.5);
+
+        //add_camera_helper();
+
+        add_gridHelper();
+
+//        create_light_up();
+        create_light_down();
 
         define_camera(camera);
 
@@ -75,6 +90,16 @@
         document.body.appendChild(renderer.domElement);
     }
 
+    function add_axis_helper() {
+        var axisHelper = new THREE.AxisHelper( 100 );
+        scene.add( axisHelper );
+    }
+
+    function add_camera_helper() {
+        var helper = new THREE.CameraHelper( camera );
+        scene.add( helper );
+    }
+
     function define_camera(camera) {
         var fov = field_of_view * ( Math.PI / 180 );
         var objectSize = Math.max(object_height, object_width);
@@ -85,18 +110,42 @@
             0
         );
 
-        camera.position.set(0, 0, 50);
+        camera.position.set(0, 0, 70);
         //camera.position.set(0, object_y_pos + Math.abs( objectSize / Math.sin( fov / 2 ) ), 0);
         //camera.lookAt(new THREE.Vector3(0,0,0));
         scene.add(camera);
+    }
+
+    function add_gridHelper() {
+        var size = 100;
+        var divisions = 10;
+
+        var gridHelper = new THREE.GridHelper( size, divisions );
+        scene.add( gridHelper );
+    }
+
+    function add_arrow_helper(x,y,z) {
+        var dir = new THREE.Vector3( x, y, z );
+
+        var vec_size = dir.size;
+
+//normalize the direction vector (convert to vector of length 1)
+        dir.normalize();
+
+        var origin = new THREE.Vector3( 0, 0, 0 );
+        var length = 1;
+        var hex = 0xff9933;
+
+        var arrowHelper = new THREE.ArrowHelper( dir, origin, 65, hex );
+        scene.add( arrowHelper );
     }
 
     function create_stl_object() {
         var stl_loader = new THREE.STLLoader();
         var material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111, shininess: 200});
 //        var stl_file = './models/stl/binary/2011-02-09_00001-001-36-35-34-33-32-31-41-42-43-44-45-46-bitesplint_cad.stl';
-        var stl_file = './models/stl/binary/2011-02-09_00001-001-lowerjaw.stl';
-//        var stl_file = './models/stl/binary/2011-02-09_00001-001-upperjaw.stl';
+//        var stl_file = './models/stl/binary/2011-02-09_00001-001-lowerjaw.stl';
+        var stl_file = './models/stl/binary/2011-02-09_00001-001-upperjaw.stl';
 //        var stl_file = './models/stl/binary/2011-02-11_00001-007-upperjaw.stl';
 //        var stl_file = './models/stl/binary/2011-02-11_00001-010-11-abutment_cad.stl';
 //        var stl_file = './models/stl/binary/2011-02-11_00001-010-lowerjaw.stl';
@@ -107,32 +156,66 @@
 //        var stl_file = './models/stl/binary/2011-02-14_00001-001.stl';
 
         stl_loader.load( stl_file, function ( geometry ) {
-            var mesh = new THREE.Mesh( geometry, material );
+            mesh = new THREE.Mesh( geometry, material );
+            //mesh.position.set( 0, 0, 0 );
+
             /*
             mesh.castShadow = true;
             mesh.receiveShadow = true;
             //mesh.rotation.set( - Math.PI / 2, 0.3, 0 );
             mesh.rotation.set( -1.5, 0.3, -1.7 );
-            mesh.position.set( 0, 0, 0 );
             mesh.scale.set( 2, 2, 2 );
             camera.lookAt(mesh.position);
              */
-            object_y_pos = mesh.position.y;
+            create_object_bounding_box();
 
-            var bbHelper = new THREE.BoxHelper(mesh, 0xffffff);
-            bbHelper.visible = true;
-            object_width = bbHelper.width;
-            object_height = bbHelper.height;
-            scene.add(bbHelper);
+            geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
+
+            boundingBox = geometry.boundingBox.clone();
+
+            console.log ('bounding box coordinates: ' +
+                '(' + boundingBox.min.x + ', ' + boundingBox.min.y + ', ' + boundingBox.min.z + '), ' +
+                '(' + boundingBox.max.x + ', ' + boundingBox.max.y + ', ' + boundingBox.max.z + ')' );
+
+            mesh.position.set( -(boundingBox.max.x + boundingBox.min.x)/2, -(boundingBox.max.y + boundingBox.min.y)/2, -(boundingBox.max.z + boundingBox.min.z)/2);
+
+            //var helper = new THREE.VertexNormalsHelper( mesh, 0.1, 0x00ff00, 0.1 );
+            //scene.add( helper );
+
             scene.add( mesh );
         } );
     }
 
-    function create_light() {
+    function create_object_bounding_box() {
+        bbHelper = new THREE.BoxHelper(mesh, 0xffffff);
+        bbHelper.visible = true;
+        bbHelper.update(mesh);
+//        object_width = bbHelper.width;
+//        object_height = bbHelper.height;
+//        object_width = bbHelper;
+//        object_height = bbHelper.box.max();
+        scene.add(bbHelper);
+    }
+
+    function create_light_up() {
         //var light = new THREE.PointLight(0xFFFFFF);
         //light.position.set(-10, 15, 50);
         var light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1.0 );
         //var light = new THREE.AmbientLight( 0x00F0F0 );
+        light.position.set(0,0,100);
+        var helper = new THREE.HemisphereLightHelper(light, 100);
+        scene.add(helper);
+        scene.add(light);
+    }
+
+    function create_light_down() {
+        //var light = new THREE.PointLight(0xFFFFFF);
+        //light.position.set(-10, 15, 50);
+        var light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1.0 );
+        //var light = new THREE.AmbientLight( 0x00F0F0 );
+        light.position.set(0,0,-100);
+        var helper = new THREE.HemisphereLightHelper(light, 120);
+        scene.add(helper);
         scene.add(light);
     }
 
