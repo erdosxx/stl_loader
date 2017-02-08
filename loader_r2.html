@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Medit STL loader 2</title>
+    <style>
+        body
+        {
+            margin: 0;
+        }
+        canvas
+        {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+<script type="text/javascript" src="js/three.min.js"> </script>
+<script type="text/javascript" src="js/loaders/STLLoader.js"> </script>
+<script type="text/javascript" src="js/OrbitControls.js"></script>
+<script type="text/javascript" src="js/TrackballControls.js"></script>
+
+<script>
+    let WIDTH = window.innerWidth;
+    let HEIGHT = window.innerHeight;
+    let renderer = new THREE.WebGLRenderer({antialias:true});
+    let scene = new THREE.Scene();
+    let field_of_view = 70;
+    let camera = new THREE.PerspectiveCamera(field_of_view, WIDTH/HEIGHT);
+    let controls;
+
+    init();
+    animate();
+
+    function init() {
+        define_renderer();
+
+        create_stl_object();
+        /*
+        //create_object_bounding_box();
+
+//        create_light_up();
+        create_light_down();
+
+        define_camera(camera);
+
+        render();
+
+        //define_orbit_controls();
+        define_trackball_controls();
+
+        window.addEventListener('resize', onWindowResize);
+        */
+        create_light_down();
+
+        define_camera();
+
+        //define_trackball_controls();
+    }
+
+    function animate() {
+        requestAnimationFrame( animate );
+        //controls.update();
+        render();
+    }
+
+    function define_trackball_controls() {
+        controls = new THREE.TrackballControls( camera );
+        controls.rotateSpeed = 2;
+        controls.panSpeed = 0.8;
+        controls.noZoom = false;
+        controls.noPan = false;
+        controls.staticMoving = true;
+        controls.dynamicDampingFactor = 0.3;
+        controls.keys = [ 65, 83, 68 ];
+        controls.addEventListener( 'change', render );
+    }
+
+    function render() {
+        renderer.render(scene, camera);
+    }
+
+    function create_light_down() {
+        //var light = new THREE.PointLight(0xFFFFFF);
+        //light.position.set(-10, 15, 50);
+        var light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1.0 );
+        //var light = new THREE.AmbientLight( 0x00F0F0 );
+        light.position.set(0,0,-100);
+        //var helper = new THREE.HemisphereLightHelper(light, 120);
+        //scene.add(helper);
+        scene.add(light);
+    }
+
+    function define_camera() {
+        var fov = field_of_view * ( Math.PI / 180 );
+
+        camera.position.set(0, 0, 70);
+        //camera.position.set(0, object_y_pos + Math.abs( objectSize / Math.sin( fov / 2 ) ), 0);
+        //camera.lookAt(new THREE.Vector3(0,0,0));
+        scene.add(camera);
+    }
+
+    function define_renderer() {
+        renderer.setSize(WIDTH, HEIGHT);
+        renderer.setClearColor(0x000000, 1);
+        document.body.appendChild(renderer.domElement);
+    }
+
+    function create_stl_object() {
+        var stl_loader = new THREE.STLLoader();
+        var material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111, shininess: 200});
+//        var stl_file = './models/stl/binary/2011-02-09_00001-001-36-35-34-33-32-31-41-42-43-44-45-46-bitesplint_cad.stl';
+        var stl_file = './models/stl/binary/2011-02-09_00001-001-lowerjaw.stl';
+//        var stl_file = './models/stl/binary/2011-02-09_00001-001-upperjaw.stl';
+//        var stl_file = './models/stl/binary/2011-02-11_00001-007-upperjaw.stl';
+//        var stl_file = './models/stl/binary/2011-02-11_00001-010-11-abutment_cad.stl';
+//        var stl_file = './models/stl/binary/2011-02-11_00001-010-lowerjaw.stl';
+//        var stl_file = './models/stl/binary/2011-02-11_00001-010-upperjaw.stl';
+//        var stl_file = './models/stl/binary/2011-02-11_00001-010-upperjaw-gingiva.stl';
+//        var stl_file = './models/stl/binary/2011-02-11_00001-010-upperjaw-marker.stl';
+//        var stl_file = './models/stl/binary/2011-02-11_00001-011.stl';
+//        var stl_file = './models/stl/binary/2011-02-14_00001-001.stl';
+
+        stl_loader.load( stl_file, function ( geometry ) {
+            mesh = new THREE.Mesh( geometry, material );
+            //mesh.position.set( 0, 0, 0 );
+
+            /*
+             mesh.castShadow = true;
+             mesh.receiveShadow = true;
+             //mesh.rotation.set( - Math.PI / 2, 0.3, 0 );
+             mesh.rotation.set( -1.5, 0.3, -1.7 );
+             mesh.scale.set( 2, 2, 2 );
+             */
+            //create_object_bounding_box();
+
+            geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
+
+            boundingBox = geometry.boundingBox.clone();
+
+            console.log ('bounding box coordinates: ' +
+                '(' + boundingBox.min.x + ', ' + boundingBox.min.y + ', ' + boundingBox.min.z + '), ' +
+                '(' + boundingBox.max.x + ', ' + boundingBox.max.y + ', ' + boundingBox.max.z + ')' );
+
+            mesh.position.set( -(boundingBox.max.x + boundingBox.min.x)/2, -(boundingBox.max.y + boundingBox.min.y)/2, -(boundingBox.max.z + boundingBox.min.z)/2);
+
+            //var helper = new THREE.VertexNormalsHelper( mesh, 0.1, 0x00ff00, 0.1 );
+            //scene.add( helper );
+            camera.lookAt(mesh.position);
+
+            scene.add( mesh );
+        } );
+    }
+
+
+</script>
+
+</body>
+</html>

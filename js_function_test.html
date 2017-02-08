@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>javascript function return test</title>
+</head>
+<body>
+<script>
+    function Person(name) {
+        this.name = name;
+        this.greeting = function() {
+            alert('Hi! I\'m ' + this.name + '.');
+        };
+    }
+
+    var person1 = new Person('Bob');
+    var person2 = new Person('Sarah');
+
+    function Person(first, last, age, gender, interests) {
+        this.name = {
+            first,
+            last
+        };
+        this.age = age;
+        this.gender = gender;
+        this.interests = interests;
+        this.bio = function() {
+            alert(this.name.first + ' ' + this.name.last + ' is ' + this.age + ' years old. He likes ' + this.interests[0] + ' and ' + this.interests[1] + '.');
+        };
+        this.greeting = function() {
+            alert('Hi! I\'m ' + this.name.first + '.');
+        };
+    };
+
+    var person1 = new Person('Bob', 'Smith', 32, 'male', ['music', 'skiing']);
+
+    console.log(person1['age']);
+    console.log(person1.interests[1]);
+    console.log(person1.bio());
+
+    let filename= './models/stl/binary/2011-02-09_00001-001-upperjaw.stl';
+    //let filename= './models/stl/binary/2011-02-09_00001-001-lowerjaw.stl';
+
+    function check_invert_object(filename ) {
+        let pattern = new RegExp("[U|u]pper");
+        let res = pattern.test(filename);
+        if (res) {
+            console.log("pattern found!");
+        } else {
+            console.log("pattern Not found!");
+        }
+        return res;
+    }
+
+    check_invert_object(filename);
+
+
+</script>
+
+</body>
+</html>
