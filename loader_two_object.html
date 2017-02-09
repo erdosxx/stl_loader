@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Medit STL loader</title>
+    <title>Medit STL loader for two object</title>
     <style>
         body
         {
@@ -108,12 +108,12 @@
         let objectSize = Math.max(object_height, object_width);
 
         /*
-        var cameraPosition = new THREE.Vector3(
-            0,
-            0,
-            object_depth/2 + Math.abs( objectSize / Math.sin( fov / 2 ) ),
-        );
-        */
+         var cameraPosition = new THREE.Vector3(
+         0,
+         0,
+         object_depth/2 + Math.abs( objectSize / Math.sin( fov / 2 ) ),
+         );
+         */
         //let fixed_camera_position = object_depth/2 + Math.abs( objectSize / Math.sin( fov / 2 ) );
         //let fixed_camera_position = Math.abs( objectSize / Math.sin( fov / 2 ) );
         let camera_loc = object_depth/2 + Math.abs( objectSize / (2 * Math.tan( fov / 2 )) );
@@ -174,8 +174,8 @@
         let stl_loader = new THREE.STLLoader();
         let material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111, shininess: 200});
 //        var stl_file = './models/stl/binary/2011-02-09_00001-001-36-35-34-33-32-31-41-42-43-44-45-46-bitesplint_cad.stl';
-        var stl_file = './models/stl/binary/2011-02-09_00001-001-lowerjaw.stl';
-//        var stl_file_high = './models/stl/binary/2011-02-09_00001-001-upperjaw.stl';
+        var stl_file_low = './models/stl/binary/2011-02-09_00001-001-lowerjaw.stl';
+        var stl_file_high = './models/stl/binary/2011-02-09_00001-001-upperjaw.stl';
 //        var stl_file = './models/stl/binary/2011-02-11_00001-007-upperjaw.stl';
 //        var stl_file = './models/stl/binary/2011-02-11_00001-010-11-abutment_cad.stl';
 //        var stl_file = './models/stl/binary/2011-02-11_00001-010-lowerjaw.stl';
@@ -187,25 +187,23 @@
 
 
 
-        stl_loader.load(stl_file, set_object);
+        stl_loader.load(stl_file_low, set_object);
 //        stl_loader.load(stl_file_high, set_object);
 
         function set_object(geometry) {
             mesh = new THREE.Mesh( geometry, material );
-            //mesh.position.set( 0, 0, 0 );
+            scene.add( mesh );
 
-            /*
-             mesh.castShadow = true;
-             mesh.receiveShadow = true;
-             //mesh.rotation.set( - Math.PI / 2, 0.3, 0 );
-             mesh.rotation.set( -1.5, 0.3, -1.7 );
-             mesh.scale.set( 2, 2, 2 );
-             */
-            create_object_bounding_box();
+        }
+
+        //create_bounding_box();
+
+        function create_bounding_box() {
+            create_object_bounding_box_helper();
 
             geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
 
-            boundingBox = geometry.boundingBox.clone();
+            let boundingBox = geometry.boundingBox.clone();
 
             let min_vertex = new Vertex(boundingBox.min.x, boundingBox.min.y, boundingBox.min.z);
             let max_vertex = new Vertex(boundingBox.max.x, boundingBox.max.y, boundingBox.max.z);
@@ -213,14 +211,6 @@
             console.log ('bounding box coordinates: ' +
                 '(' + min_vertex.x + ', ' + min_vertex.y + ', ' + min_vertex.z + '), ' +
                 '(' + max_vertex.x + ', ' + max_vertex.y + ', ' + max_vertex.z + ')' );
-
-            /*
-            let center_point = {
-                x: (boundingBox.max.x + boundingBox.min.x)/2,
-                y: (boundingBox.max.y + boundingBox.min.y)/2,
-                z: (boundingBox.max.z + boundingBox.min.z)/2
-            }
-            */
 
             let center_point = new Vertex(
                 (max_vertex.x + min_vertex.x)/2,
@@ -230,20 +220,15 @@
 
             mesh.position.set( - center_point.x, - center_point.y, - center_point.z);
 
-            //var helper = new THREE.VertexNormalsHelper( mesh, 0.1, 0x00ff00, 0.1 );
-            //scene.add( helper );
-
-            let isInvert = check_invert_object(stl_file);
-
+            let isInvert = check_invert_object(stl_file_low);
             set_camera_location(min_vertex, max_vertex, isInvert);
             create_light(isInvert);
-
-            scene.add( mesh );
         }
+
+
     }
 
-
-    function create_object_bounding_box() {
+    function create_object_bounding_box_helper() {
         bbHelper = new THREE.BoxHelper(mesh, 0xffffff);
         bbHelper.visible = true;
         bbHelper.update(mesh);
@@ -290,7 +275,7 @@
 
     function define_orbit_controls() {
         // Add OrbitControls so that we can pan around with the mouse.
-         controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
         /*
          var controls = new THREE.TrackballControls( camera );
          controls.rotateSpeed = 1.0;
