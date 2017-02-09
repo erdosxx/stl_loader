@@ -28,7 +28,7 @@
     let scene = new THREE.Scene();
     let field_of_view = 70;
     //let camera = new THREE.PerspectiveCamera(field_of_view, WIDTH/HEIGHT);
-    let camera = new THREE.OrthographicCamera(WIDTH/-32, WIDTH/32, HEIGHT/32, HEIGHT/-32, 1, 1000);
+    let camera = new THREE.OrthographicCamera(WIDTH/-25, WIDTH/25, HEIGHT/25, HEIGHT/-25, 1, 1000);
     let controls;
     let mesh;
     let bbHelper;
@@ -174,7 +174,7 @@
         let stl_loader = new THREE.STLLoader();
         let material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111, shininess: 200});
 //        var stl_file = './models/stl/binary/2011-02-09_00001-001-36-35-34-33-32-31-41-42-43-44-45-46-bitesplint_cad.stl';
-        var stl_file = './models/stl/binary/2011-02-09_00001-001-lowerjaw.stl';
+//        var stl_file = './models/stl/binary/2011-02-09_00001-001-lowerjaw.stl';
 //        var stl_file = './models/stl/binary/2011-02-09_00001-001-upperjaw.stl';
 //        var stl_file = './models/stl/binary/2011-02-11_00001-007-upperjaw.stl';
 //        var stl_file = './models/stl/binary/2011-02-11_00001-010-11-abutment_cad.stl';
@@ -182,7 +182,7 @@
 //        var stl_file = './models/stl/binary/2011-02-11_00001-010-upperjaw.stl';
 //        var stl_file = './models/stl/binary/2011-02-11_00001-010-upperjaw-gingiva.stl';
 //        var stl_file = './models/stl/binary/2011-02-11_00001-010-upperjaw-marker.stl';
-//        var stl_file = './models/stl/binary/2011-02-11_00001-011.stl';
+        var stl_file = './models/stl/binary/2011-02-11_00001-011.stl';
 //        var stl_file = './models/stl/binary/2011-02-14_00001-001.stl';
 
 
