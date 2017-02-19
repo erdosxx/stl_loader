@@ -32,6 +32,9 @@
     let controls;
     let mesh;
 
+    let raycaster = new THREE.Raycaster();
+    let fn_helper;
+
     let stl_files = [
         './models/stl/binary/2011-02-09_00001-001-36-35-34-33-32-31-41-42-43-44-45-46-bitesplint_cad.stl',
         './models/stl/binary/2011-02-09_00001-001-lowerjaw.stl',
@@ -49,12 +52,54 @@
     init();
     animate();
 
+    function add_face_normal_helper() {
+        let geometry = new THREE.CylinderGeometry( 0, 0.5, 3, 12 );
+
+        //geometry.translate( 0, 50, 0 );
+        geometry.rotateX( Math.PI / 2 );
+        fn_helper = new THREE.Mesh( geometry, new THREE.MeshNormalMaterial() );
+        scene.add( fn_helper );
+    }
+
+    function onMouseMove(event) {
+        let mouse = new THREE.Vector2();
+        mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+        mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+
+        raycaster.setFromCamera( mouse, camera );
+
+        // See if the ray from the camera into the world hits one of our meshes
+        let intersects = raycaster.intersectObject( mesh );
+
+
+        // Toggle rotation bool for meshes that we clicked
+        if ( intersects.length > 0 ) {
+            fn_helper.position.set( 0, 0, 0 );
+            fn_helper.lookAt( intersects[ 0 ].face.normal );
+            fn_helper.position.copy( intersects[ 0 ].point );
+            console.log("Insersect x: " + intersects[0].point.x);
+            console.log("Insersect y: " + intersects[0].point.y);
+            console.log("Insersect z: " + intersects[0].point.z);
+//            console.log("helper x: " + helper.position.x);
+//            console.log("helper y: " + helper.position.y);
+//            console.log("helper z: " + helper.position.z);
+            //console.log("Intersects!");
+        } else {
+            let normal_direction = new THREE.Vector3(0,0,1);
+            fn_helper.position.set( 0, 0, 0 );
+            fn_helper.lookAt(normal_direction);
+            console.log("Not Intersects!");
+        }
+    }
+
     function init() {
         define_renderer();
 
         define_camera();
 
-        create_stl_object(stl_files[6]);
+        create_stl_object(stl_files[1]);
+
+        add_face_normal_helper();
 
         add_axis_helper();
 
@@ -77,6 +122,7 @@
         define_orthographic_trackball_controls();
 
         window.addEventListener('resize', onWindowResize);
+        window.addEventListener( 'mousemove', onMouseMove, false );
     }
 
     function animate() {
