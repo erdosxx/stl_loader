@@ -84,6 +84,10 @@
 //            console.log("helper y: " + helper.position.y);
 //            console.log("helper z: " + helper.position.z);
             //console.log("Intersects!");
+
+            //set rotate target for more fine rotation.
+            camera.target.position.copy(intersects[0].point);
+
         } else {
             let normal_direction = new THREE.Vector3(0,0,1);
             fn_helper.position.set( 0, 0, 0 );

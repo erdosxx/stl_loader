@@ -154,6 +154,7 @@ THREE.OrthographicTrackballControls = function ( object, domElement ) {
 
 			if ( _this.noRoll ) {
 
+				// Math.SQRT1_2: the square root of 1/2 which is approximately 0.707
 				if ( length < Math.SQRT1_2 ) {
 
 					mouseOnBall.z = Math.sqrt( 1.0 - length * length );
