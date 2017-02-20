@@ -77,16 +77,18 @@
             fn_helper.position.set( 0, 0, 0 );
             fn_helper.lookAt( intersects[ 0 ].face.normal );
             fn_helper.position.copy( intersects[ 0 ].point );
-            console.log("Insersect x: " + intersects[0].point.x);
-            console.log("Insersect y: " + intersects[0].point.y);
-            console.log("Insersect z: " + intersects[0].point.z);
+//            console.log("Insersect x: " + intersects[0].point.x);
+//            console.log("Insersect y: " + intersects[0].point.y);
+//            console.log("Insersect z: " + intersects[0].point.z);
 //            console.log("helper x: " + helper.position.x);
 //            console.log("helper y: " + helper.position.y);
 //            console.log("helper z: " + helper.position.z);
-            //console.log("Intersects!");
+//            console.log("Intersects!");
 
             //set rotate target for more fine rotation.
+            //if (typeof camera.target != 'undefined') {
             camera.target.position.copy(intersects[0].point);
+            //}
 
         } else {
             let normal_direction = new THREE.Vector3(0,0,1);

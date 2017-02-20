@@ -8,7 +8,8 @@
 THREE.OrthographicTrackballControls = function ( object, domElement ) {
 
 	var _this = this;
-	var STATE = { NONE: - 1, ROTATE: 0, ZOOM: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_ZOOM_PAN: 4 };
+	//var STATE = { NONE: - 1, ROTATE: 0, ZOOM: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_ZOOM_PAN: 4 };
+    var STATE = { NONE: - 1, ROTATE: 2, ZOOM: 1, PAN: 0, TOUCH_ROTATE: 3, TOUCH_ZOOM_PAN: 4 };
 
 	this.object = object;
 	this.domElement = ( domElement !== undefined ) ? domElement : document;
@@ -432,7 +433,7 @@ THREE.OrthographicTrackballControls = function ( object, domElement ) {
 			_rotateStart.copy( getMouseProjectionOnBall( event.pageX, event.pageY ) );
 			_rotateEnd.copy( _rotateStart );
 
-		} else if ( _state === STATE.ZOOM && ! _this.noZoom ) {
+		} else if ( _state === STATE.ZOOM  && ! _this.noZoom ) {
 
 			_zoomStart.copy( getMouseOnScreen( event.pageX, event.pageY ) );
 			_zoomEnd.copy( _zoomStart );
@@ -489,18 +490,50 @@ THREE.OrthographicTrackballControls = function ( object, domElement ) {
 
 	}
 
-	function mousewheel( event ) {
+	// function mousewheel( event ) {
+    //
+	// 	if ( _this.enabled === false ) return;
+    //
+	// 	event.preventDefault();
+	// 	event.stopPropagation();
+    //
+	// 	_zoomStart.y += event.deltaY * 0.01;
+	// 	_this.dispatchEvent( startEvent );
+	// 	_this.dispatchEvent( endEvent );
+    //
+	// }
 
-		if ( _this.enabled === false ) return;
+    function mousewheel( event ) {
 
-		event.preventDefault();
-		event.stopPropagation();
+        if ( _this.enabled === false ) return;
 
-		_zoomStart.y += event.deltaY * 0.01;
-		_this.dispatchEvent( startEvent );
-		_this.dispatchEvent( endEvent );
+        event.preventDefault();
+        event.stopPropagation();
 
-	}
+        switch ( event.deltaMode ) {
+
+            case 2:
+                // Zoom in pages
+                _zoomStart.y -= event.deltaY * 0.025;
+                break;
+
+            case 1:
+                // Zoom in lines
+                _zoomStart.y -= event.deltaY * 0.01;
+                break;
+
+            default:
+                // undefined, 0, assume pixels
+                _zoomStart.y -= event.deltaY * 0.00025;
+                break;
+
+        }
+
+        _this.dispatchEvent( startEvent );
+        _this.dispatchEvent( endEvent );
+
+    }
+
 
 	function touchstart( event ) {
 
