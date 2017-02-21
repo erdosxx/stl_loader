@@ -64,7 +64,7 @@
         define_orthographic_trackball_controls();
 
         window.addEventListener('resize', onWindowResize);
-        window.addEventListener( 'mousemove', onMouseMove, false );
+        window.addEventListener('mousemove', onMouseMove, false);
     }
 
     function animate() {
@@ -110,45 +110,45 @@
             set_camera_position(boundingbox_property);
 
             scene.add( mesh );
+
+            function compute_boundingbox_property(geometry, boundingbox_property) {
+                geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
+
+                let boundingBox = new THREE.Box3();
+                boundingBox = geometry.boundingBox.clone();
+
+                let min_vertex = new THREE.Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.min.z);
+                let max_vertex = new THREE.Vector3(boundingBox.max.x, boundingBox.max.y, boundingBox.max.z);
+
+                boundingbox_property.center.set(
+                    (max_vertex.x + min_vertex.x) / 2,
+                    (max_vertex.y + min_vertex.y) / 2,
+                    (max_vertex.z + min_vertex.z) / 2
+                );
+
+                boundingbox_property.width =  max_vertex.x - min_vertex.x;
+                boundingbox_property.height = max_vertex.y - min_vertex.y;
+                boundingbox_property.depth = max_vertex.z - min_vertex.z;
+            }
+
+            function move_mesh_to_center(boundingbox_property) {
+                mesh.position.sub(boundingbox_property.center);
+            }
+
+            function set_camera_position(boundingbox_property, isInvert = false) {
+                let field_of_view = 70;
+                let fov = field_of_view * ( Math.PI / 180 );
+
+                let objectSize = Math.max(boundingbox_property.height, boundingbox_property.width);
+
+                let camera_loc = boundingbox_property.depth/2 + Math.abs( objectSize / (2 * Math.tan( fov / 2 )) );
+                let fixed_camera_position = isInvert ?  -1 * camera_loc : camera_loc;
+
+                camera.position.set(0, 0, fixed_camera_position);
+
+                scene.add(camera);
+            }
         }
-    }
-
-    function compute_boundingbox_property(geometry, boundingbox_property) {
-        geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
-
-        let boundingBox = new THREE.Box3();
-        boundingBox = geometry.boundingBox.clone();
-
-        let min_vertex = new THREE.Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.min.z);
-        let max_vertex = new THREE.Vector3(boundingBox.max.x, boundingBox.max.y, boundingBox.max.z);
-
-        boundingbox_property.center.set(
-            (max_vertex.x + min_vertex.x) / 2,
-            (max_vertex.y + min_vertex.y) / 2,
-            (max_vertex.z + min_vertex.z) / 2
-        );
-
-        boundingbox_property.width =  max_vertex.x - min_vertex.x;
-        boundingbox_property.height = max_vertex.y - min_vertex.y;
-        boundingbox_property.depth = max_vertex.z - min_vertex.z;
-    }
-
-    function move_mesh_to_center(boundingbox_property) {
-        mesh.position.sub(boundingbox_property.center);
-    }
-
-    function set_camera_position(boundingbox_property, isInvert = false) {
-        let field_of_view = 70;
-        let fov = field_of_view * ( Math.PI / 180 );
-
-        let objectSize = Math.max(boundingbox_property.height, boundingbox_property.width);
-
-        let camera_loc = boundingbox_property.depth/2 + Math.abs( objectSize / (2 * Math.tan( fov / 2 )) );
-        let fixed_camera_position = isInvert ?  -1 * camera_loc : camera_loc;
-
-        camera.position.set(0, 0, fixed_camera_position);
-
-        scene.add(camera);
     }
 
     function add_face_normal_helper() {
@@ -170,8 +170,6 @@
         light.position.set(camera.position.x, camera.position.y, camera.position.z);
 
         let sphereSize = 1;
-        var pointLightHelper = new THREE.PointLightHelper(light, sphereSize);
-        scene.add(pointLightHelper);
         scene.add(light);
     }
 
@@ -196,21 +194,32 @@
         // See if the ray from the camera into the world hits one of our meshes
         let intersects = raycaster.intersectObject( mesh );
 
-        // Toggle rotation bool for meshes that we clicked
-        if ( intersects.length > 0 ) {
-            face_normal_helper.position.set( 0, 0, 0 );
-            face_normal_helper.lookAt( intersects[ 0 ].face.normal );
-            face_normal_helper.position.copy( intersects[ 0 ].point );
+        if ( isIntersect() ) {
+            update_face_normal_helper();
+            update_rotation_point_to_intersect_point();
+        } else {
+            restore_rotation_point_to_origin();
+        }
 
-            // set rotate target for more fine rotation.
-            // the location of target is the center of rotation.
+        function isIntersect() {
+            return intersects.length > 0;
+        }
+
+        function update_face_normal_helper() {
+            face_normal_helper.position.set(0, 0, 0);
+            face_normal_helper.lookAt(intersects[0].face.normal);
+            face_normal_helper.position.copy(intersects[0].point);
+        }
+
+        function update_rotation_point_to_intersect_point() {
             if (typeof camera.target != 'undefined') {
                 camera.target.position.copy(intersects[0].point);
             }
+        }
 
-        } else {
-            let normal_direction = new THREE.Vector3(0,0,1);
-            face_normal_helper.position.set( 0, 0, 0 );
+        function restore_rotation_point_to_origin() {
+            let normal_direction = new THREE.Vector3(0, 0, 1);
+            face_normal_helper.position.set(0, 0, 0);
             face_normal_helper.lookAt(normal_direction);
         }
     }
