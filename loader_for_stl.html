@@ -132,14 +132,14 @@
                 mesh.position.sub(boundingbox_property.center);
             }
 
-            function set_camera_position(boundingbox_property, isInvert = false) {
+            function set_camera_position(boundingbox_property) {
                 let field_of_view = 70;
                 let fov = field_of_view * ( Math.PI / 180 );
 
                 let objectSize = Math.max(boundingbox_property.height, boundingbox_property.width);
 
                 let camera_loc = boundingbox_property.depth/2 + Math.abs( objectSize / (2 * Math.tan( fov / 2 )) );
-                let fixed_camera_position = isInvert ?  -1 * camera_loc : camera_loc;
+                let fixed_camera_position = camera_loc;
 
                 camera.position.set(0, 0, fixed_camera_position);
 
@@ -161,7 +161,7 @@
         scene.add( axisHelper );
     }
 
-    function create_pointLight(camera, isInvert = false) {
+    function create_pointLight(camera) {
         light = new THREE.PointLight(0xffffff, 1, 200);
 
         light.position.set(camera.position.x, camera.position.y, camera.position.z);
