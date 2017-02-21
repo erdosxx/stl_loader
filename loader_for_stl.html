@@ -23,10 +23,7 @@
 <script>
     let renderer = new THREE.WebGLRenderer({antialias:true});
     let scene = new THREE.Scene();
-    let camera;
-    let light;
-    let controls;
-    let mesh;
+    let camera, light, controls, mesh;
 
     let raycaster = new THREE.Raycaster();
     let face_normal_helper;
@@ -169,7 +166,6 @@
 
         light.position.set(camera.position.x, camera.position.y, camera.position.z);
 
-        let sphereSize = 1;
         scene.add(light);
     }
 
