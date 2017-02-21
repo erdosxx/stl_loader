@@ -8,7 +8,7 @@
 THREE.OrthographicTrackballControls = function ( object, domElement ) {
 
 	var _this = this;
-	//var STATE = { NONE: - 1, ROTATE: 0, ZOOM: 1, PAN: 2, TOUCH_ROTATE: 3, TOUCH_ZOOM_PAN: 4 };
+	// mouse and touch key binding
     var STATE = { NONE: - 1, ROTATE: 2, ZOOM: 1, PAN: 0, TOUCH_ROTATE: 3, TOUCH_ZOOM_PAN: 4 };
 
 	this.object = object;
@@ -489,19 +489,6 @@ THREE.OrthographicTrackballControls = function ( object, domElement ) {
 		_this.dispatchEvent( endEvent );
 
 	}
-
-	// function mousewheel( event ) {
-    //
-	// 	if ( _this.enabled === false ) return;
-    //
-	// 	event.preventDefault();
-	// 	event.stopPropagation();
-    //
-	// 	_zoomStart.y += event.deltaY * 0.01;
-	// 	_this.dispatchEvent( startEvent );
-	// 	_this.dispatchEvent( endEvent );
-    //
-	// }
 
     function mousewheel( event ) {
 
