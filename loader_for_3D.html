@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Medit STL loader</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="page-wrapper">
+
+    <h1>Open a model file:</h1>
+    <div>
+        <input type="file" id="fileInput">
+    </div>
+    <pre id="fileDisplayArea"></pre>
+</div>
+<script type="text/javascript" src="js/three.min.js"></script>
+<script type="text/javascript" src="js/three.js"></script>
+
+<script type="text/javascript" src="js/loaders/STLLoader.js"></script>
+
+<script type="text/javascript" src="js/loaders/draco_decoder.js"></script>
+<script type="text/javascript" src="js/loaders/DRACOLoader.js"></script>
+
+<script type="text/javascript" src="js/loaders/ctm/lzma.js"></script>
+<script type="text/javascript" src="js/loaders/ctm/ctm.js"></script>
+<script type="text/javascript" src="js/loaders/ctm/CTMLoader.js"></script>
+
+<script type="text/javascript" src="js/OrthographicTrackballControls_medit.js"></script>
+
+<script>
+    let renderer = new THREE.WebGLRenderer({antialias: true});
+    let scene = new THREE.Scene();
+    let camera, light, controls, mesh;
+
+    let raycaster = new THREE.Raycaster();
+    let face_normal_helper;
+
+    // Module that exposes all the core funcionality of the Draco decoder.
+    const DracoModule = Module;
+
+    let stl_files = [
+        './models/stl/binary/2011-02-09_00001-001-36-35-34-33-32-31-41-42-43-44-45-46-bitesplint_cad.stl',
+        './models/stl/binary/2011-02-09_00001-001-lowerjaw.stl',
+        './models/stl/binary/2011-02-09_00001-001-upperjaw.stl',
+        './models/stl/binary/2011-02-11_00001-007-upperjaw.stl',
+        './models/stl/binary/2011-02-11_00001-010-11-abutment_cad.stl',
+        './models/stl/binary/2011-02-11_00001-010-lowerjaw.stl',
+        './models/stl/binary/2011-02-11_00001-010-upperjaw.stl',
+        './models/stl/binary/2011-02-11_00001-010-upperjaw-gingiva.stl',
+        './models/stl/binary/2011-02-11_00001-010-upperjaw-marker.stl',
+        './models/stl/binary/2011-02-11_00001-011.stl',
+        './models/stl/binary/2011-02-14_00001-001.stl',
+        './models/stl/binary/EsteDent_Model_1.stl'
+    ];
+
+    let drc_files = [
+        './models/drc/2011-02-09_00001-001-36-35-34-33-32-31-41-42-43-44-45-46-bitesplint_cad.drc',
+        './models/drc/2011-02-09_00001-001-lowerjaw.drc',
+        './models/drc/2011-02-09_00001-001-upperjaw.drc',
+        './models/drc/2011-02-11_00001-007-upperjaw.drc',
+        './models/drc/2011-02-11_00001-010-11-abutment_cad.drc',
+        './models/drc/2011-02-11_00001-010-lowerjaw.drc',
+        './models/drc/2011-02-11_00001-010-upperjaw.drc',
+        './models/drc/2011-02-11_00001-010-upperjaw-gingiva.drc',
+        './models/drc/2011-02-11_00001-010-upperjaw-marker.drc',
+        './models/drc/2011-02-11_00001-011.drc',
+        './models/drc/2011-02-14_00001-001.drc',
+        './models/drc/EsteDent_Model_1.drc'
+    ];
+
+    let ctm_files = [
+        './models/ctm/2011-02-09_00001-001-36-35-34-33-32-31-41-42-43-44-45-46-bitesplint_cad.ctm',
+        './models/ctm/2011-02-09_00001-001-lowerjaw.ctm',
+        './models/ctm/2011-02-09_00001-001-upperjaw.ctm',
+        './models/ctm/2011-02-11_00001-007-upperjaw.ctm',
+        './models/ctm/2011-02-11_00001-010-11-abutment_cad.ctm',
+        './models/ctm/2011-02-11_00001-010-lowerjaw.ctm',
+        './models/ctm/2011-02-11_00001-010-upperjaw.ctm',
+        './models/ctm/2011-02-11_00001-010-upperjaw-gingiva.ctm',
+        './models/ctm/2011-02-11_00001-010-upperjaw-marker.ctm',
+        './models/ctm/2011-02-11_00001-011.ctm',
+        './models/ctm/2011-02-14_00001-001.ctm',
+        './models/ctm/EsteDent_Model_1.ctm'
+    ];
+
+    init();
+    animate();
+
+    function init() {
+        define_renderer();
+
+        define_camera();
+
+        //create_stl_object(stl_files[11]);
+        //create_ctm_object(ctm_files[11]);
+
+        //create_drc_object();
+        //create_drc_object("file:///C:/localgit/ThreeJSCrashCourse/models/drc/2011-02-09_00001-001-lowerjaw.drc");
+
+        add_face_normal_helper();
+
+        add_axis_helper();
+
+        create_pointLight(camera);
+
+        define_orthographic_trackball_controls();
+
+        window.addEventListener('resize', onWindowResize);
+        window.addEventListener('mousemove', onMouseMove, false);
+        //window.addEventListener('mouseup', onMouseMove, false);
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        render();
+    }
+
+    function define_renderer() {
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        renderer.setSize(width, height);
+        renderer.setClearColor(0x000000, 1);
+        document.body.appendChild(renderer.domElement);
+    }
+
+    function define_camera() {
+        let WIDTH = window.innerWidth;
+        let HEIGHT = window.innerHeight;
+        camera = new THREE.OrthographicCamera(WIDTH / -25, WIDTH / 25, HEIGHT / 25, HEIGHT / -25, 1, 1000);
+    }
+
+    function create_stl_object(stl_file) {
+        let stl_loader = new THREE.STLLoader();
+
+        stl_loader.load(stl_file, set_object);
+
+        function set_object(geometry) {
+            let material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111, shininess: 200});
+            mesh = new THREE.Mesh(geometry, material);
+
+            let boundingbox_property = {
+                center: new THREE.Vector3(),
+                width: 0,
+                height: 0,
+                depth: 0
+            };
+
+            compute_boundingbox_property(geometry, boundingbox_property);
+
+            move_mesh_to_center(boundingbox_property);
+
+            set_camera_position(boundingbox_property);
+
+            scene.add(mesh);
+
+            function compute_boundingbox_property(geometry, boundingbox_property) {
+                geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
+
+                let boundingBox = new THREE.Box3();
+                boundingBox = geometry.boundingBox.clone();
+
+                let min_vertex = new THREE.Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.min.z);
+                let max_vertex = new THREE.Vector3(boundingBox.max.x, boundingBox.max.y, boundingBox.max.z);
+
+                boundingbox_property.center.set(
+                    (max_vertex.x + min_vertex.x) / 2,
+                    (max_vertex.y + min_vertex.y) / 2,
+                    (max_vertex.z + min_vertex.z) / 2
+                );
+
+                boundingbox_property.width = max_vertex.x - min_vertex.x;
+                boundingbox_property.height = max_vertex.y - min_vertex.y;
+                boundingbox_property.depth = max_vertex.z - min_vertex.z;
+            }
+
+            function move_mesh_to_center(boundingbox_property) {
+                mesh.position.sub(boundingbox_property.center);
+            }
+
+            function set_camera_position(boundingbox_property) {
+                let field_of_view = 70;
+                let fov = field_of_view * ( Math.PI / 180 );
+
+                let objectSize = Math.max(boundingbox_property.height, boundingbox_property.width);
+
+                let camera_loc = boundingbox_property.depth / 2 + Math.abs(objectSize / (2 * Math.tan(fov / 2)));
+                let fixed_camera_position = camera_loc;
+
+                camera.position.set(0, 0, fixed_camera_position);
+
+                scene.add(camera);
+            }
+        }
+    }
+
+    function create_ctm_object(ctm_file) {
+        let ctm_loader = new THREE.CTMLoader();
+
+        ctm_loader.load(ctm_file, set_object);
+
+        function set_object(geometry) {
+            let material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111, shininess: 200});
+            mesh = new THREE.Mesh(geometry, material);
+
+            let boundingbox_property = {
+                center: new THREE.Vector3(),
+                width: 0,
+                height: 0,
+                depth: 0
+            };
+
+            compute_boundingbox_property(geometry, boundingbox_property);
+
+            move_mesh_to_center(boundingbox_property);
+
+            set_camera_position(boundingbox_property);
+
+            scene.add(mesh);
+
+            function compute_boundingbox_property(geometry, boundingbox_property) {
+                geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
+
+                let boundingBox = new THREE.Box3();
+                boundingBox = geometry.boundingBox.clone();
+
+                let min_vertex = new THREE.Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.min.z);
+                let max_vertex = new THREE.Vector3(boundingBox.max.x, boundingBox.max.y, boundingBox.max.z);
+
+                boundingbox_property.center.set(
+                    (max_vertex.x + min_vertex.x) / 2,
+                    (max_vertex.y + min_vertex.y) / 2,
+                    (max_vertex.z + min_vertex.z) / 2
+                );
+
+                boundingbox_property.width = max_vertex.x - min_vertex.x;
+                boundingbox_property.height = max_vertex.y - min_vertex.y;
+                boundingbox_property.depth = max_vertex.z - min_vertex.z;
+            }
+
+            function move_mesh_to_center(boundingbox_property) {
+                mesh.position.sub(boundingbox_property.center);
+            }
+
+            function set_camera_position(boundingbox_property) {
+                let field_of_view = 70;
+                let fov = field_of_view * ( Math.PI / 180 );
+
+                let objectSize = Math.max(boundingbox_property.height, boundingbox_property.width);
+
+                let camera_loc = boundingbox_property.depth / 2 + Math.abs(objectSize / (2 * Math.tan(fov / 2)));
+                let fixed_camera_position = camera_loc;
+
+                camera.position.set(0, 0, fixed_camera_position);
+
+                scene.add(camera);
+            }
+        }
+    }
+
+    window.onload = function() {
+        //function create_drc_object() {
+        const fileInput = document.getElementById('fileInput');
+        const fileDisplayArea = document.getElementById('fileDisplayArea');
+
+        fileInput.addEventListener('change', function (e) {
+            const file = fileInput.files[0];
+
+            const reader = new FileReader();
+
+            reader.readAsArrayBuffer(file);
+
+            reader.onload = function (e) {
+                const dracoLoader = new THREE.DRACOLoader();
+                const geometry = dracoLoader.decodeDracoFile(reader.result);
+
+                let material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111, shininess: 200});
+                geometry.computeVertexNormals();
+                mesh = new THREE.Mesh(geometry, material);
+
+                let boundingbox_property = {
+                    center: new THREE.Vector3(),
+                    width: 0,
+                    height: 0,
+                    depth: 0
+                };
+
+                compute_boundingbox_property(geometry, boundingbox_property);
+
+                move_mesh_to_center(boundingbox_property);
+
+                set_camera_position(boundingbox_property);
+
+                const selectedObject = scene.getObjectByName("my_mesh");
+                scene.remove(selectedObject);
+                mesh.name = "my_mesh";
+                scene.add(mesh);
+
+                function compute_boundingbox_property(geometry, boundingbox_property) {
+                    geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
+
+                    let boundingBox = new THREE.Box3();
+                    boundingBox = geometry.boundingBox.clone();
+
+                    let min_vertex = new THREE.Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.min.z);
+                    let max_vertex = new THREE.Vector3(boundingBox.max.x, boundingBox.max.y, boundingBox.max.z);
+
+                    boundingbox_property.center.set(
+                        (max_vertex.x + min_vertex.x) / 2,
+                        (max_vertex.y + min_vertex.y) / 2,
+                        (max_vertex.z + min_vertex.z) / 2
+                    );
+
+                    boundingbox_property.width = max_vertex.x - min_vertex.x;
+                    boundingbox_property.height = max_vertex.y - min_vertex.y;
+                    boundingbox_property.depth = max_vertex.z - min_vertex.z;
+                }
+
+                function move_mesh_to_center(boundingbox_property) {
+                    mesh.position.sub(boundingbox_property.center);
+                }
+
+                function set_camera_position(boundingbox_property) {
+                    let field_of_view = 70;
+                    let fov = field_of_view * ( Math.PI / 180 );
+
+                    let objectSize = Math.max(boundingbox_property.height, boundingbox_property.width);
+
+                    let camera_loc = boundingbox_property.depth / 2 + Math.abs(objectSize / (2 * Math.tan(fov / 2)));
+                    let fixed_camera_position = camera_loc;
+
+                    camera.position.set(0, 0, fixed_camera_position);
+
+                    scene.add(camera);
+                }
+            }
+        })
+    }
+
+    function add_face_normal_helper() {
+        let geometry = new THREE.CylinderGeometry(0, 0.5, 3, 12);
+
+        geometry.rotateX(Math.PI / 2);
+        face_normal_helper = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial());
+        scene.add(face_normal_helper);
+    }
+
+    function add_axis_helper() {
+        var axisHelper = new THREE.AxisHelper(10);
+        scene.add(axisHelper);
+    }
+
+    function create_pointLight(camera) {
+        light = new THREE.PointLight(0xffffff, 1, 200);
+
+        light.position.set(camera.position.x, camera.position.y, camera.position.z);
+
+        scene.add(light);
+    }
+
+    function define_orthographic_trackball_controls() {
+        controls = new THREE.OrthographicTrackballControls(camera);
+        controls.rotateSpeed = 2;
+        controls.panSpeed = 0.8;
+        controls.noZoom = false;
+        controls.noPan = false;
+        controls.staticMoving = true;
+        controls.dynamicDampingFactor = 0.3;
+        controls.keys = [65, 83, 68];
+        controls.addEventListener('change', render);
+    }
+
+    function onMouseMove(event) {
+        let center_of_screen = new THREE.Vector2();
+
+        // set raycaster to center of screen
+        raycaster.setFromCamera(center_of_screen, camera);
+
+        // See if the ray from the camera into the world hits one of our meshes
+        let intersects = raycaster.intersectObject(mesh);
+
+        if (isIntersect()) {
+            update_face_normal_helper();
+            update_rotation_point_to_intersect_point();
+        } else {
+            restore_rotation_point_to_origin();
+        }
+
+        function isIntersect() {
+            return intersects.length > 0;
+        }
+
+        function update_face_normal_helper() {
+            face_normal_helper.position.set(0, 0, 0);
+            face_normal_helper.lookAt(intersects[0].face.normal);
+            face_normal_helper.position.copy(intersects[0].point);
+        }
+
+        function update_rotation_point_to_intersect_point() {
+            if (typeof camera.target != 'undefined') {
+                camera.target.position.copy(intersects[0].point);
+            }
+        }
+
+        function restore_rotation_point_to_origin() {
+            let normal_direction = new THREE.Vector3(0, 0, 1);
+            face_normal_helper.position.set(0, 0, 0);
+            face_normal_helper.lookAt(normal_direction);
+        }
+    }
+
+    function render() {
+        light.position.copy(camera.position);
+        renderer.render(scene, camera);
+    }
+
+    function onWindowResize() {
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        controls.handleResize();
+    }
+
+</script>
+
+</body>
+</html>
