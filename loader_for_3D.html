@@ -12,9 +12,14 @@
             width: 100%;
             height: 100%;
         }
+
     </style>
 </head>
 <body>
+<!--
+<pre id="fileDisplayArea" ></pre>
+-->
+<!--
 <div id="page-wrapper">
 
     <h1>Open a model file:</h1>
@@ -23,6 +28,7 @@
     </div>
     <pre id="fileDisplayArea"></pre>
 </div>
+-->
 <script type="text/javascript" src="js/three.min.js"></script>
 <script type="text/javascript" src="js/three.js"></script>
 
@@ -44,6 +50,8 @@
 
     let raycaster = new THREE.Raycaster();
     let face_normal_helper;
+
+    let isFileLoaded = false;
 
     // Module that exposes all the core funcionality of the Draco decoder.
     const DracoModule = Module;
@@ -103,9 +111,7 @@
 
         //create_stl_object(stl_files[11]);
         //create_ctm_object(ctm_files[11]);
-
-        //create_drc_object();
-        //create_drc_object("file:///C:/localgit/ThreeJSCrashCourse/models/drc/2011-02-09_00001-001-lowerjaw.drc");
+        create_drc_object(drc_files[1]);
 
         add_face_normal_helper();
 
@@ -164,45 +170,10 @@
 
             scene.add(mesh);
 
-            function compute_boundingbox_property(geometry, boundingbox_property) {
-                geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
-
-                let boundingBox = new THREE.Box3();
-                boundingBox = geometry.boundingBox.clone();
-
-                let min_vertex = new THREE.Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.min.z);
-                let max_vertex = new THREE.Vector3(boundingBox.max.x, boundingBox.max.y, boundingBox.max.z);
-
-                boundingbox_property.center.set(
-                    (max_vertex.x + min_vertex.x) / 2,
-                    (max_vertex.y + min_vertex.y) / 2,
-                    (max_vertex.z + min_vertex.z) / 2
-                );
-
-                boundingbox_property.width = max_vertex.x - min_vertex.x;
-                boundingbox_property.height = max_vertex.y - min_vertex.y;
-                boundingbox_property.depth = max_vertex.z - min_vertex.z;
-            }
-
-            function move_mesh_to_center(boundingbox_property) {
-                mesh.position.sub(boundingbox_property.center);
-            }
-
-            function set_camera_position(boundingbox_property) {
-                let field_of_view = 70;
-                let fov = field_of_view * ( Math.PI / 180 );
-
-                let objectSize = Math.max(boundingbox_property.height, boundingbox_property.width);
-
-                let camera_loc = boundingbox_property.depth / 2 + Math.abs(objectSize / (2 * Math.tan(fov / 2)));
-                let fixed_camera_position = camera_loc;
-
-                camera.position.set(0, 0, fixed_camera_position);
-
-                scene.add(camera);
-            }
+            isFileLoaded = true;
         }
     }
+
 
     function create_ctm_object(ctm_file) {
         let ctm_loader = new THREE.CTMLoader();
@@ -228,47 +199,84 @@
 
             scene.add(mesh);
 
-            function compute_boundingbox_property(geometry, boundingbox_property) {
-                geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
-
-                let boundingBox = new THREE.Box3();
-                boundingBox = geometry.boundingBox.clone();
-
-                let min_vertex = new THREE.Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.min.z);
-                let max_vertex = new THREE.Vector3(boundingBox.max.x, boundingBox.max.y, boundingBox.max.z);
-
-                boundingbox_property.center.set(
-                    (max_vertex.x + min_vertex.x) / 2,
-                    (max_vertex.y + min_vertex.y) / 2,
-                    (max_vertex.z + min_vertex.z) / 2
-                );
-
-                boundingbox_property.width = max_vertex.x - min_vertex.x;
-                boundingbox_property.height = max_vertex.y - min_vertex.y;
-                boundingbox_property.depth = max_vertex.z - min_vertex.z;
-            }
-
-            function move_mesh_to_center(boundingbox_property) {
-                mesh.position.sub(boundingbox_property.center);
-            }
-
-            function set_camera_position(boundingbox_property) {
-                let field_of_view = 70;
-                let fov = field_of_view * ( Math.PI / 180 );
-
-                let objectSize = Math.max(boundingbox_property.height, boundingbox_property.width);
-
-                let camera_loc = boundingbox_property.depth / 2 + Math.abs(objectSize / (2 * Math.tan(fov / 2)));
-                let fixed_camera_position = camera_loc;
-
-                camera.position.set(0, 0, fixed_camera_position);
-
-                scene.add(camera);
-            }
+            isFileLoaded = true;
         }
     }
 
-    window.onload = function() {
+    function create_drc_object(drc_file) {
+        let drc_loader = new THREE.FileLoader();
+        drc_loader.setResponseType( 'arraybuffer' );
+        drc_loader.load(drc_file, drc_onload);
+
+        function drc_onload(data) {
+            const dracoLoader = new THREE.DRACOLoader();
+            const geometry = dracoLoader.decodeDracoFile(data);
+
+            let material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111, shininess: 200});
+            geometry.computeVertexNormals();
+            mesh = new THREE.Mesh(geometry, material);
+
+            let boundingbox_property = {
+                center: new THREE.Vector3(),
+                width: 0,
+                height: 0,
+                depth: 0
+            };
+
+            compute_boundingbox_property(geometry, boundingbox_property);
+
+            move_mesh_to_center(boundingbox_property);
+
+            set_camera_position(boundingbox_property);
+
+//            const selectedObject = scene.getObjectByName("my_mesh");
+//            scene.remove(selectedObject);
+//            mesh.name = "my_mesh";
+            scene.add(mesh);
+
+            isFileLoaded = true;
+        }
+    }
+
+    function compute_boundingbox_property(geometry, boundingbox_property) {
+        geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
+
+        let boundingBox = new THREE.Box3();
+        boundingBox = geometry.boundingBox.clone();
+
+        let min_vertex = new THREE.Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.min.z);
+        let max_vertex = new THREE.Vector3(boundingBox.max.x, boundingBox.max.y, boundingBox.max.z);
+
+        boundingbox_property.center.set(
+            (max_vertex.x + min_vertex.x) / 2,
+            (max_vertex.y + min_vertex.y) / 2,
+            (max_vertex.z + min_vertex.z) / 2
+        );
+
+        boundingbox_property.width = max_vertex.x - min_vertex.x;
+        boundingbox_property.height = max_vertex.y - min_vertex.y;
+        boundingbox_property.depth = max_vertex.z - min_vertex.z;
+    }
+
+    function move_mesh_to_center(boundingbox_property) {
+        mesh.position.sub(boundingbox_property.center);
+    }
+
+    function set_camera_position(boundingbox_property) {
+        let field_of_view = 70;
+        let fov = field_of_view * ( Math.PI / 180 );
+
+        let objectSize = Math.max(boundingbox_property.height, boundingbox_property.width);
+
+        let camera_loc = boundingbox_property.depth / 2 + Math.abs(objectSize / (2 * Math.tan(fov / 2)));
+        let fixed_camera_position = camera_loc;
+
+        camera.position.set(0, 0, fixed_camera_position);
+
+        scene.add(camera);
+    }
+/*
+    window.onload = function () {
         //function create_drc_object() {
         const fileInput = document.getElementById('fileInput');
         const fileDisplayArea = document.getElementById('fileDisplayArea');
@@ -305,48 +313,10 @@
                 scene.remove(selectedObject);
                 mesh.name = "my_mesh";
                 scene.add(mesh);
-
-                function compute_boundingbox_property(geometry, boundingbox_property) {
-                    geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
-
-                    let boundingBox = new THREE.Box3();
-                    boundingBox = geometry.boundingBox.clone();
-
-                    let min_vertex = new THREE.Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.min.z);
-                    let max_vertex = new THREE.Vector3(boundingBox.max.x, boundingBox.max.y, boundingBox.max.z);
-
-                    boundingbox_property.center.set(
-                        (max_vertex.x + min_vertex.x) / 2,
-                        (max_vertex.y + min_vertex.y) / 2,
-                        (max_vertex.z + min_vertex.z) / 2
-                    );
-
-                    boundingbox_property.width = max_vertex.x - min_vertex.x;
-                    boundingbox_property.height = max_vertex.y - min_vertex.y;
-                    boundingbox_property.depth = max_vertex.z - min_vertex.z;
-                }
-
-                function move_mesh_to_center(boundingbox_property) {
-                    mesh.position.sub(boundingbox_property.center);
-                }
-
-                function set_camera_position(boundingbox_property) {
-                    let field_of_view = 70;
-                    let fov = field_of_view * ( Math.PI / 180 );
-
-                    let objectSize = Math.max(boundingbox_property.height, boundingbox_property.width);
-
-                    let camera_loc = boundingbox_property.depth / 2 + Math.abs(objectSize / (2 * Math.tan(fov / 2)));
-                    let fixed_camera_position = camera_loc;
-
-                    camera.position.set(0, 0, fixed_camera_position);
-
-                    scene.add(camera);
-                }
             }
         })
     }
-
+*/
     function add_face_normal_helper() {
         let geometry = new THREE.CylinderGeometry(0, 0.5, 3, 12);
 
@@ -385,15 +355,18 @@
 
         // set raycaster to center of screen
         raycaster.setFromCamera(center_of_screen, camera);
+        let intersects;
 
-        // See if the ray from the camera into the world hits one of our meshes
-        let intersects = raycaster.intersectObject(mesh);
+        if (isFileLoaded) {
+            // See if the ray from the camera into the world hits one of our meshes
+            intersects = raycaster.intersectObject(mesh);
 
-        if (isIntersect()) {
-            update_face_normal_helper();
-            update_rotation_point_to_intersect_point();
-        } else {
-            restore_rotation_point_to_origin();
+            if (isIntersect()) {
+                update_face_normal_helper();
+                update_rotation_point_to_intersect_point();
+            } else {
+                restore_rotation_point_to_origin();
+            }
         }
 
         function isIntersect() {

@@ -53,12 +53,12 @@ THREE.DRACOLoader.prototype = {
          */
         const geometryType = wrapper.GetEncodedGeometryType(buffer);
         if (geometryType == DracoModule.TRIANGULAR_MESH) {
-          fileDisplayArea.innerText = "Loaded a mesh.\n";
+          //fileDisplayArea.innerText = "Loaded a mesh.\n";
         } else if (geometryType == DracoModule.POINT_CLOUD) {
-          fileDisplayArea.innerText = "Loaded a point cloud.\n";
+          //fileDisplayArea.innerText = "Loaded a point cloud.\n";
         } else {
           const errorMsg = "Error: Unknown geometry type.";
-          fileDisplayArea.innerText = errorMsg;
+          //fileDisplayArea.innerText = errorMsg;
           throw new Error(errorMsg);
         }
         return scope.convertDracoGeometryTo3JS(wrapper, geometryType, buffer);
@@ -100,7 +100,7 @@ THREE.DRACOLoader.prototype = {
                                                 Module.POSITION);
         if (posAttId == -1) {
           const errorMsg = "No position attribute found in the mesh.";
-          fileDisplayArea.innerText = errorMsg;
+          //fileDisplayArea.innerText = errorMsg;
           DracoModule.destroy(wrapper);
           DracoModule.destroy(dracoGeometry);
           throw new Error(errorMsg);
@@ -209,7 +209,7 @@ THREE.DRACOLoader.prototype = {
         DracoModule.destroy(wrapper);
         DracoModule.destroy(dracoGeometry);
 
-        fileDisplayArea.innerText += geometryInfoStr;
+        //fileDisplayArea.innerText += geometryInfoStr;
 
         // Import data to Three JS geometry.
         const geometry = new THREE.BufferGeometry();
