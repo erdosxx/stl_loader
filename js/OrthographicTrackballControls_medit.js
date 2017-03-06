@@ -89,6 +89,7 @@ THREE.OrthographicTrackballControls = function ( object, domElement ) {
 			this.screen.width = window.innerWidth;
 			this.screen.height = window.innerHeight;
 
+
 		} else {
 
 			var box = this.domElement.getBoundingClientRect();
@@ -130,6 +131,7 @@ THREE.OrthographicTrackballControls = function ( object, domElement ) {
 				( pageX - _this.screen.left ) / _this.screen.width,
 				( pageY - _this.screen.top ) / _this.screen.height
 			);
+
 
 			return vector;
 
@@ -288,8 +290,9 @@ THREE.OrthographicTrackballControls = function ( object, domElement ) {
 				pan.copy( _eye ).cross( _this.object.up ).setLength( mouseChange.x );
 				pan.add( objectUp.copy( _this.object.up ).setLength( mouseChange.y ) );
 
-				_this.object.position.add( pan );
-				_this.target.add( pan );
+				//_this.object.position.add( pan );
+				//_this.target.add( pan );
+                mesh.geometry.translate(- pan.x, - pan.y, - pan.z);
 
 				if ( _this.staticMoving ) {
 

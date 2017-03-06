@@ -109,9 +109,10 @@
 
         define_camera();
 
-        //create_stl_object(stl_files[11]);
+        // 11, 9
+        create_stl_object(stl_files[3]);
         //create_ctm_object(ctm_files[11]);
-        create_drc_object(drc_files[1]);
+        //create_drc_object(drc_files[11]);
 
         add_face_normal_helper();
 
@@ -181,7 +182,8 @@
         ctm_loader.load(ctm_file, set_object);
 
         function set_object(geometry) {
-            let material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111, shininess: 200});
+            let material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111,
+                shininess: 200, shading: THREE.FlatShading });
             mesh = new THREE.Mesh(geometry, material);
 
             let boundingbox_property = {
@@ -212,7 +214,7 @@
             const dracoLoader = new THREE.DRACOLoader();
             const geometry = dracoLoader.decodeDracoFile(data);
 
-            let material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111, shininess: 200});
+            let material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111, shininess: 200, shading: THREE.FlatShading});
             geometry.computeVertexNormals();
             mesh = new THREE.Mesh(geometry, material);
 
@@ -365,7 +367,7 @@
                 update_face_normal_helper();
                 update_rotation_point_to_intersect_point();
             } else {
-                restore_rotation_point_to_origin();
+                restoreFaceNormalPointToOrigin();
             }
         }
 
@@ -374,18 +376,27 @@
         }
 
         function update_face_normal_helper() {
-            face_normal_helper.position.set(0, 0, 0);
+            //face_normal_helper.position.set(0, 0, 0);
             face_normal_helper.lookAt(intersects[0].face.normal);
             face_normal_helper.position.copy(intersects[0].point);
+            mesh.geometry.translate(- intersects[0].point.x, - intersects[0].point.y, - intersects[0].point.z);
+            //face_normal_helper.position.set(0, 0, 0);
+            //face_normal_helper.lookAt(0,0,0);
+            //face_normal_helper.position.copy(0,0,0);
         }
 
         function update_rotation_point_to_intersect_point() {
-            if (typeof camera.target != 'undefined') {
-                camera.target.position.copy(intersects[0].point);
-            }
+            //if (typeof camera.target != 'undefined') {
+                //controls.target.position.copy(intersects[0].point);
+                //mesh.position.sub(intersects[0].point);
+                //camera.target.position.sub(intersects[0].point);
+                //controls.target.position.sub(intersects[0].point);
+                //camera.position.sub(intersects[0].point);
+                //console.log("camera target defined");
+            //}
         }
 
-        function restore_rotation_point_to_origin() {
+        function restoreFaceNormalPointToOrigin() {
             let normal_direction = new THREE.Vector3(0, 0, 1);
             face_normal_helper.position.set(0, 0, 0);
             face_normal_helper.lookAt(normal_direction);
