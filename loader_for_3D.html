@@ -110,9 +110,9 @@
         define_camera();
 
         // 11, 9
-        create_stl_object(stl_files[3]);
+        //create_stl_object(stl_files[3]);
         //create_ctm_object(ctm_files[11]);
-        //create_drc_object(drc_files[11]);
+        create_drc_object(drc_files[11]);
 
         add_face_normal_helper();
 
@@ -344,6 +344,7 @@
         controls = new THREE.OrthographicTrackballControls(camera);
         controls.rotateSpeed = 2;
         controls.panSpeed = 0.8;
+        controls.zoomSpeed = 1.7;
         controls.noZoom = false;
         controls.noPan = false;
         controls.staticMoving = true;
