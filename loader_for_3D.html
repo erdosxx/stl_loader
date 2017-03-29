@@ -329,9 +329,14 @@
 
             if (isIntersect()) {
                 updateFaceNormalHelper();
+                moveOriginToCenterOfScreenAtFaceNormal();
             } else {
                 restoreFaceNormalPointToOrigin();
             }
+        }
+
+        function moveOriginToCenterOfScreenAtFaceNormal () {
+            mesh.geometry.translate(- intersects[0].point.x, - intersects[0].point.y, - intersects[0].point.z);
         }
 
         function isIntersect() {
@@ -341,7 +346,6 @@
         function updateFaceNormalHelper() {
             faceNormalHelper.lookAt(intersects[0].face.normal);
             faceNormalHelper.position.copy(intersects[0].point);
-            mesh.geometry.translate(- intersects[0].point.x, - intersects[0].point.y, - intersects[0].point.z);
         }
 
         function restoreFaceNormalPointToOrigin() {

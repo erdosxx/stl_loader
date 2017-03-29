@@ -275,6 +275,10 @@ THREE.OrthographicTrackballControls = function ( object, domElement ) {
 			objectUp = new THREE.Vector3(),
 			pan = new THREE.Vector3();
 
+		function moveOriginToPanningPosition () {
+            mesh.geometry.translate(- pan.x, - pan.y, - pan.z);
+		}
+
 		return function panCamera() {
 
 			mouseChange.copy( _panEnd ).sub( _panStart );
@@ -292,7 +296,7 @@ THREE.OrthographicTrackballControls = function ( object, domElement ) {
 
 				//_this.object.position.add( pan );
 				//_this.target.add( pan );
-                mesh.geometry.translate(- pan.x, - pan.y, - pan.z);
+                moveOriginToPanningPosition();
 
 				if ( _this.staticMoving ) {
 
