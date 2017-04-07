@@ -105,9 +105,9 @@
 
         defineCamera();
 
-        //createStlObject(stlFiles[11]);
-        //createCtmObject(ctmFiles[11]);
-        createDrcObject(drcFiles[11]);
+        //createStlObject(stlFiles[2]);
+        createCtmObject(ctmFiles[2]);
+        //createDrcObject(drcFiles[2]);
 
         addFaceNormalHelper();
 
@@ -143,8 +143,9 @@
     function defineRenderer() {
         var WIDTH = window.innerWidth;
         var HEIGHT = window.innerHeight;
+        var backgroundColor = 0x323232;
         renderer.setSize(WIDTH, HEIGHT);
-        renderer.setClearColor(0x000000, 1);
+        renderer.setClearColor(backgroundColor, 1);
         document.body.appendChild(renderer.domElement);
     }
 
@@ -160,7 +161,8 @@
         stlLoader.load(stlFile, setObject);
 
         function setObject(geometry) {
-            var material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111, shininess: 200});
+            var material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111,
+                shininess: 200, side: THREE.DoubleSide});
             mesh = new THREE.Mesh(geometry, material);
 
             var boundingboxProperty = {
@@ -189,7 +191,7 @@
 
         function setObject(geometry) {
             var material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111,
-                shininess: 200, shading: THREE.FlatShading });
+                shininess: 200, shading: THREE.FlatShading, side: THREE.DoubleSide});
             mesh = new THREE.Mesh(geometry, material);
 
             var boundingboxProperty = {
@@ -221,7 +223,7 @@
             var geometry = dracoLoader.decodeDracoFile(data);
 
             var material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111,
-                shininess: 200, shading: THREE.FlatShading});
+                shininess: 200, shading: THREE.FlatShading, side: THREE.DoubleSide});
             geometry.computeVertexNormals();
             mesh = new THREE.Mesh(geometry, material);
 
