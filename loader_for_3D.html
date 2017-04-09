@@ -5,20 +5,18 @@
     <title>Medit STL loader</title>
     <style>
         body {
-            margin: 0;
+            margin: 0px;
         }
 
         canvas {
             width: 100%;
             height: 100%;
         }
-
     </style>
 </head>
 <body>
 
 <script type="text/javascript" src="js/three.min.js"></script>
-<script type="text/javascript" src="js/three.js"></script>
 
 <script type="text/javascript" src="js/libs/stats.min.js"></script>
 <script type="text/javascript" src="js/Detector.js"></script>
@@ -42,6 +40,7 @@
     var scene = new THREE.Scene();
     var camera, light, controls, mesh;
 
+
     var raycaster = new THREE.Raycaster();
     var faceNormalHelper;
 
@@ -49,7 +48,14 @@
 
     var stats, container;
 
-    // Module that exposes all the core funcionality of the Draco decoder.
+    var backgroundColor = 0x323232;
+    var teethColor = 0xFFCC99;
+    //var specularColor = 0x111111;
+    var specularColor = 0x000000;
+    //var shininessVaule = 200;
+    var shininessVaule = 0;
+
+    // Module that exposes all the core functionality of the Draco decoder.
     const DracoModule = Module;
 
     var stlFiles = [
@@ -106,8 +112,8 @@
         defineCamera();
 
         //createStlObject(stlFiles[2]);
-        createCtmObject(ctmFiles[2]);
-        //createDrcObject(drcFiles[2]);
+        //createCtmObject(ctmFiles[1]);
+        createDrcObject(drcFiles[2]);
 
         addFaceNormalHelper();
 
@@ -122,14 +128,6 @@
         window.addEventListener('resize', onWindowResize, false);
         window.addEventListener('mousemove', onMouseMove, false);
         window.addEventListener('touchend', onMouseMove, false);
-
-    }
-
-    function addFrameStatisticsInfo() {
-        stats = new Stats();
-        container = document.createElement( 'div' );
-        document.body.appendChild( container );
-        container.appendChild( stats.dom );
     }
 
     function animate() {
@@ -143,74 +141,60 @@
     function defineRenderer() {
         var WIDTH = window.innerWidth;
         var HEIGHT = window.innerHeight;
-        var backgroundColor = 0x323232;
         renderer.setSize(WIDTH, HEIGHT);
-        renderer.setClearColor(backgroundColor, 1);
+        var alpha_opacity = 1.0;
+        renderer.setClearColor(backgroundColor, alpha_opacity);
         document.body.appendChild(renderer.domElement);
     }
 
     function defineCamera() {
         var WIDTH = window.innerWidth;
         var HEIGHT = window.innerHeight;
-        camera = new THREE.OrthographicCamera(WIDTH / -25, WIDTH / 25, HEIGHT / 25, HEIGHT / -25, 1, 1000);
+
+        var left = WIDTH / -25;
+        var right = WIDTH / 25;
+        var top = HEIGHT / 25;
+        var bottom = HEIGHT / -25;
+
+        var near = 1;
+        var far = 1000;
+
+        camera = new THREE.OrthographicCamera(left, right, top, bottom, near, far);
     }
 
     function createStlObject(stlFile) {
         var stlLoader = new THREE.STLLoader();
 
         stlLoader.load(stlFile, setObject);
-
-        function setObject(geometry) {
-            var material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111,
-                shininess: 200, side: THREE.DoubleSide});
-            mesh = new THREE.Mesh(geometry, material);
-
-            var boundingboxProperty = {
-                center: new THREE.Vector3(),
-                width: 0,
-                height: 0,
-                depth: 0
-            };
-
-            computeBoundingboxProperty(geometry, boundingboxProperty);
-
-            moveMeshToCenter(boundingboxProperty);
-
-            setCameraPosition(boundingboxProperty);
-
-            scene.add(mesh);
-
-            isFileLoaded = true;
-        }
     }
 
     function createCtmObject(ctmFile) {
         var ctmLoader = new THREE.CTMLoader();
 
         ctmLoader.load(ctmFile, setObject);
+    }
 
-        function setObject(geometry) {
-            var material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111,
-                shininess: 200, shading: THREE.FlatShading, side: THREE.DoubleSide});
-            mesh = new THREE.Mesh(geometry, material);
+    function setObject(geometry) {
+        var material = new THREE.MeshPhongMaterial({color: teethColor, specular: specularColor,
+            shininess: shininessVaule, side: THREE.DoubleSide});
+        mesh = new THREE.Mesh(geometry, material);
 
-            var boundingboxProperty = {
-                center: new THREE.Vector3(),
-                width: 0,
-                height: 0,
-                depth: 0
-            };
+        var boundingboxProperty = {
+            center: new THREE.Vector3(),
+            width: 0,
+            height: 0,
+            depth: 0
+        };
 
-            computeBoundingboxProperty(geometry, boundingboxProperty);
+        computeBoundingboxProperty(geometry, boundingboxProperty);
 
-            moveMeshToCenter(boundingboxProperty);
+        moveMeshToCenter(boundingboxProperty);
 
-            setCameraPosition(boundingboxProperty);
+        setCameraPosition(boundingboxProperty);
 
-            scene.add(mesh);
+        scene.add(mesh);
 
-            isFileLoaded = true;
-        }
+        isFileLoaded = true;
     }
 
     function createDrcObject(drcFile) {
@@ -222,9 +206,11 @@
             var dracoLoader = new THREE.DRACOLoader();
             var geometry = dracoLoader.decodeDracoFile(data);
 
-            var material = new THREE.MeshPhongMaterial({color: 0xFFEFCC, specular: 0x111111,
-                shininess: 200, shading: THREE.FlatShading, side: THREE.DoubleSide});
-            geometry.computeVertexNormals();
+            var material = new THREE.MeshPhongMaterial({color: teethColor, specular: specularColor,
+                shininess: shininessVaule, shading: THREE.FlatShading, side: THREE.DoubleSide});
+
+            //geometry.computeVertexNormals();
+
             mesh = new THREE.Mesh(geometry, material);
 
             var boundingboxProperty = {
@@ -249,11 +235,8 @@
     function computeBoundingboxProperty(geometry, boundingboxProperty) {
         geometry.computeBoundingBox();  // otherwise geometry.boundingBox will be undefined
 
-        var boundingBox = new THREE.Box3();
-        boundingBox = geometry.boundingBox.clone();
-
-        var minVertex = new THREE.Vector3(boundingBox.min.x, boundingBox.min.y, boundingBox.min.z);
-        var maxVertex = new THREE.Vector3(boundingBox.max.x, boundingBox.max.y, boundingBox.max.z);
+        var minVertex = new THREE.Vector3().copy(geometry.boundingBox.min);
+        var maxVertex = new THREE.Vector3().copy(geometry.boundingBox.max);
 
         boundingboxProperty.center.set(
             (maxVertex.x + minVertex.x) / 2,
@@ -276,16 +259,19 @@
 
         var objectSize = Math.max(boundingboxProperty.height, boundingboxProperty.width);
 
-        var cameraLocation = boundingboxProperty.depth / 2 + Math.abs(objectSize / (2 * Math.tan(fov / 2)));
-        var fixedCameraPosition = cameraLocation;
+        var cameraZPosition = boundingboxProperty.depth / 2 + Math.abs(objectSize / (2 * Math.tan(fov / 2)));
 
-        camera.position.set(0, 0, fixedCameraPosition);
+        camera.position.set(0, 0, cameraZPosition);
 
         scene.add(camera);
     }
 
     function addFaceNormalHelper() {
-        var geometry = new THREE.CylinderGeometry(0, 0.5, 3, 12);
+        var radiusTop = 0;
+        var radiusBottom = 0.5;
+        var height = 3;
+        var radiusSegments = 12;
+        var geometry = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, radiusSegments);
 
         geometry.rotateX(Math.PI / 2);
         faceNormalHelper = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial());
@@ -293,14 +279,25 @@
     }
 
     function addAxisHelper() {
-        var axisHelper = new THREE.AxisHelper(10);
+        var axisHelperSize = 10;
+        var axisHelper = new THREE.AxisHelper(axisHelperSize);
         scene.add(axisHelper);
     }
 
     function createPointLight(camera) {
-        light = new THREE.PointLight(0xffffff, 1, 200);
+        //var lightColor = 0xFFFFFF;
+        //var intencity = 1;
+        //var lightDistance = 200;
+        var lightColor = 0xFFFFFF;
+        var intencity = 1;
+        var lightDistance = 0;
+        var lightDecay = 0;
+        light = new THREE.PointLight(lightColor, intencity, lightDistance, lightDecay);
 
-        light.position.set(camera.position.x, camera.position.y, camera.position.z);
+        var lightDistanceRatio = 100;
+
+        //light.position.set( camera.position.x, camera.position.y, camera.position.z);
+        light.position.addVectors(camera.position, lightDistanceRatio * camera.up);
 
         scene.add(light);
     }
@@ -316,6 +313,30 @@
         controls.dynamicDampingFactor = 0.3;
         controls.keys = [65, 83, 68];
         controls.addEventListener('change', render);
+    }
+
+    function addFrameStatisticsInfo() {
+        stats = new Stats();
+        container = document.createElement( 'div' );
+        document.body.appendChild( container );
+        container.appendChild( stats.dom );
+    }
+
+    function onWindowResize() {
+        var WIDTH = window.innerWidth;
+        var HEIGHT = window.innerHeight;
+
+        renderer.setSize(WIDTH, HEIGHT);
+
+        camera.aspect = WIDTH / HEIGHT;
+
+        camera.left = WIDTH / -25;
+        camera.right = WIDTH / 25;
+        camera.top = HEIGHT / 25;
+        camera.bottom = HEIGHT / -25;
+
+        camera.updateProjectionMatrix();
+        controls.handleResize();
     }
 
     function onMouseMove(event) {
@@ -358,23 +379,8 @@
     }
 
     function render() {
-        light.position.copy(camera.position);
+        //light.position.copy(camera.position);
         renderer.render(scene, camera);
-    }
-
-    function onWindowResize() {
-        var WIDTH = window.innerWidth;
-        var HEIGHT = window.innerHeight;
-        renderer.setSize(WIDTH, HEIGHT);
-
-        camera.aspect = WIDTH / HEIGHT;
-        camera.left = WIDTH / -25;
-        camera.right = WIDTH / 25;
-        camera.top = HEIGHT / 25;
-        camera.bottom = HEIGHT / -25;
-
-        camera.updateProjectionMatrix();
-        controls.handleResize();
     }
 
 </script>
