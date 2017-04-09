@@ -311,7 +311,11 @@
         controls.noPan = false;
         controls.staticMoving = true;
         controls.dynamicDampingFactor = 0.3;
-        controls.keys = [65, 83, 68];
+
+        var panKeyValue = 65; // A
+        var zoomKeyValue = 83; // S
+        var rotateKeyValue = 68; // D
+        controls.keys = [panKeyValue, zoomKeyValue, rotateKeyValue];
         controls.addEventListener('change', render);
     }
 
@@ -339,7 +343,7 @@
         controls.handleResize();
     }
 
-    function onMouseMove(event) {
+    function onMouseMove() {
         var centerOfScreen = new THREE.Vector2();
 
         // set raycaster to center of screen
