@@ -312,10 +312,15 @@
         controls.staticMoving = true;
         controls.dynamicDampingFactor = 0.3;
 
-        var panKeyValue = 65; // A
-        var zoomKeyValue = 83; // S
-        var rotateKeyValue = 68; // D
-        controls.keys = [panKeyValue, zoomKeyValue, rotateKeyValue];
+        var A_key = 65;
+        var S_key = 83;
+        var D_key = 68;
+
+        var panKey = A_key;
+        var zoomKey = S_key;
+        var rotateKey = D_key;
+
+        controls.keys = [panKey, zoomKey, rotateKey];
         controls.addEventListener('change', render);
     }
 
@@ -349,12 +354,13 @@
         // set raycaster to center of screen
         raycaster.setFromCamera(centerOfScreen, camera);
         var intersects;
+        var nearestIntersectPoint = new THREE.Vector3();
 
         if (isFileLoaded) {
-            // See if the ray from the camera into the world hits one of our meshes
             intersects = raycaster.intersectObject(mesh);
 
             if (isIntersect()) {
+                nearestIntersectPoint.copy(intersects[0].point);
                 updateFaceNormalHelper();
                 moveOriginToCenterOfScreenAtFaceNormal();
             } else {
@@ -363,7 +369,7 @@
         }
 
         function moveOriginToCenterOfScreenAtFaceNormal () {
-            mesh.geometry.translate(- intersects[0].point.x, - intersects[0].point.y, - intersects[0].point.z);
+            mesh.geometry.translate(- nearestIntersectPoint.x, - nearestIntersectPoint.y, - nearestIntersectPoint.z);
         }
 
         function isIntersect() {
@@ -372,7 +378,7 @@
 
         function updateFaceNormalHelper() {
             faceNormalHelper.lookAt(intersects[0].face.normal);
-            faceNormalHelper.position.copy(intersects[0].point);
+            faceNormalHelper.position.copy(nearestIntersectPoint);
         }
 
         function restoreFaceNormalPointToOrigin() {
