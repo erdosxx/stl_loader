@@ -119,8 +119,8 @@
         defineRenderer();
 
         //createStlObject(stlFiles[2]);
-        //createCtmObject(ctmFiles[2]);
-        createDrcObject(drcFiles[2]);
+        createCtmObject(ctmFiles[2]);
+        //createDrcObject(drcFiles[2]);
 
         defineCamera();
 
@@ -128,7 +128,7 @@
 
         addAxisHelper();
 
-        createPointLight(camera);
+        createDirectionalLight();
 
         defineOrthographicTrackballControls();
 
@@ -304,19 +304,11 @@
         scene.add(axisHelper);
     }
 
-    function createPointLight(camera) {
-        var lightColor = 0xFFFFFF;
-        var intencity = 1;
-        var lightDistance = 0;
-        var lightDecay = 0;
-        light = new THREE.PointLight(lightColor, intencity, lightDistance, lightDecay);
+    function createDirectionalLight() {
+        light = new THREE.DirectionalLight( 0xffffff, 1 );
+        light.position.copy(camera.position);
 
-        var lightDistanceRatio = 100;
-
-        // TODO: check light position function
-        light.position.addVectors(camera.position, lightDistanceRatio * camera.up);
-
-        scene.add(light);
+        scene.add( light );
     }
 
     function defineOrthographicTrackballControls() {
@@ -411,7 +403,7 @@
     }
 
     function render() {
-        //light.position.copy(camera.position);
+        light.position.copy(camera.position);
         renderer.render(scene, camera);
     }
 
