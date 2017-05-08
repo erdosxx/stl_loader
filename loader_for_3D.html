@@ -129,6 +129,7 @@
         addAxisHelper();
 
         createDirectionalLight();
+        //createPointLight();
 
         defineOrthographicTrackballControls();
 
@@ -311,6 +312,22 @@
         scene.add( light );
     }
 
+    function createPointLight() {
+        var lightColor = 0xFFFFFF;
+        var intencity = 1;
+        var lightDistance = 0;
+        var lightDecay = 0;
+
+        light = new THREE.PointLight(lightColor, intencity, lightDistance, lightDecay);
+
+        var lightDistanceRatio = 100;
+
+        light.position.addVectors(camera.position, lightDistanceRatio * camera.up);
+        scene.add(light);
+    }
+
+
+
     function defineOrthographicTrackballControls() {
         controls = new THREE.OrthographicTrackballControls(camera);
         controls.rotateSpeed = 2;
@@ -365,9 +382,8 @@
         var intersects;
         var nearestIntersectPoint = new THREE.Vector3();
 
-        var object_array = [mesh.children[0], mesh.children[1]];
-
         if (isFileLoaded) {
+            var object_array = [mesh.children[0], mesh.children[1]];
             intersects = raycaster.intersectObjects(object_array);
 
             if (isIntersect()) {
